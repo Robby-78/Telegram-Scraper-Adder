@@ -5,6 +5,7 @@ import os, sys
 import configparser
 import csv
 import time
+from telethon.tl.types import Dialog
 
 re="\033[1;31m"
 gr="\033[1;32m"
@@ -47,20 +48,27 @@ banner()
 chats = []
 last_date = None
 chunk_size = 200
-groups=[]
- 
-result = client(GetDialogsRequest(
-             offset_date=last_date,
-             offset_id=0,
-             offset_peer=InputPeerEmpty(),
-             limit=chunk_size,
-             hash = 0
-         ))
-chats.extend(result.chats)
- 
+groups = []
+
+while True:
+    result = client(GetDialogsRequest(
+        offset_date=last_date,
+        offset_id=0,
+        offset_peer=InputPeerEmpty(),
+        limit=chunk_size,
+        hash=0
+    ))
+
+    chats.extend(result.chats)
+
+    if isinstance(result.dialogs, Dialog):
+        last_date = result.dialogs[-1].date
+    else:
+        break
+
 for chat in chats:
     try:
-        if chat.megagroup== True:
+        if chat.megagroup:
             groups.append(chat)
     except:
         continue
